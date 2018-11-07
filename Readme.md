@@ -15,7 +15,8 @@ This repo contains two functions that provide such functionality.
 `datediff` calculates the difference between two dates in years, months and/or days.
 
 
-#### Syntax
+Syntax
+---
 
 ```
 	datediff varlist(min=2 max=2), format(string) [replace]
@@ -55,7 +56,8 @@ user-specified names of variables to be created. These variables will contain ye
 - `format(years = varname1 months = varname2)`: result is reported in years and months
 - `format(months = varname2 days = varname3)`: result is reported in months and days
 
-#### Examples
+Examples
+---
 
 Examples of usage are offered in file `examples.do`
 
@@ -65,8 +67,8 @@ Examples of usage are offered in file `examples.do`
 `cutoff` adds a user-specified number of months to a date
 
 
-#### Syntax
-
+Syntax
+---
 
 ```
 	cutoff varlist(max=1) [if] [in], CDate(name) Mon(varname)
@@ -86,7 +88,8 @@ Examples of usage are offered in file `examples.do`
 
 **NOTE: This command is currently under revision.**
 
-#### Examples
+Examples
+---
 
 Examples of usage will be offered shortly.
 
