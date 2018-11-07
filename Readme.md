@@ -8,15 +8,14 @@ Working with dates in Stata is made easy using its built-in `datetime` functiona
 Yet, while it is straight forward to compute difference between dates in days, there is no easy way to compute
 difference between dates in years, months and days, or years or months only. In addition, 
 there is no easy way to calculate the date resulting from adding a specific number of months to a start date.
-This package includes two functions that make such kinds of calculations.
+This repo contains two functions that provide such functionality.
 
 ### Programme `datediff`
 
 `datediff` calculates the difference between two dates in years, months and/or days.
 
 
-Syntax
----
+#### Syntax
 
 ```
 	datediff varlist(min=2 max=2), format(string) [replace]
@@ -53,8 +52,10 @@ user-specified names of variables to be created. These variables will contain ye
 - `format(years = varname)`: result is reported in years
 - `format(months = varname)`: result is reported in months
 - `format(days = varname)`: result is reported in days
-- `format(years = varname1 months = varname2)`: results is reported in years and months
-- `format(months = varname2 days = varname3)`: results is reported in months and days
+- `format(years = varname1 months = varname2)`: result is reported in years and months
+- `format(months = varname2 days = varname3)`: result is reported in months and days
+
+#### Examples
 
 Examples of usage are offered in file `examples.do`
 
@@ -64,8 +65,8 @@ Examples of usage are offered in file `examples.do`
 `cutoff` adds a user-specified number of months to a date
 
 
-Syntax
----
+#### Syntax
+
 
 ```
 	cutoff varlist(max=1) [if] [in], CDate(name) Mon(varname)
@@ -84,6 +85,8 @@ Syntax
 <br>
 
 **NOTE: This command is currently under revision.**
+
+#### Examples
 
 Examples of usage will be offered shortly.
 
