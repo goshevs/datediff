@@ -6,7 +6,7 @@
 capture program drop cutoff
 qui program define cutoff
 
-	syntax varlist(max=1) [if] [in], CDate(name) [ Mon(varname)]
+	syntax varlist(max=1) [if] [in], CDate(name) Mon(varname)
 
 	qui {	
 		tokenize `varlist'
