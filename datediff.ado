@@ -71,10 +71,11 @@ program define dateDiff, sclass
 	tempvar daysleft 
 	if ("`years'" == "" & "`months'" == "") {
 		*** difference in days
-		gen `daysleft' = `today' - `bdate' + 1
+		gen `days' = `today' - `bdate' + 1
 	}
 	else {
-		noi di "Am I here?"
+		noi di "Year/month/day"
+		
 		tempvar diffMonth shiftedDate  ///
 					dmon1 dmon2 dmon3 same_month resid 
 		
@@ -87,57 +88,20 @@ program define dateDiff, sclass
 		
 		*** Move bdate forward by the amount of months
 		dateForward `bdate', gen(`shiftedDate') step(months = `months') type(`type')
-		
-		
-		
-		
+				
 		*** Compute difference in days
 		_daysInMonth `bdate' `dmon1'  // number of days in month(bdate)
 		
-		
-		
-		/*
-		replace `months' = cond(`bdate' >= `today', ///
-								cond("`type'" == "age" & day(`bdate') - day(`today')  == 1, ///
-									 `months', ///
-									 `months' - 1), ///
-								`months')
-		*/
-		
-		*** is shiftedDate > today ?
-		gen `daysleft' = cond(`today' > `shiftedDate', ///
-							  `today' - `shiftedDate', ///
-							  `today' - `shiftedDate')
-		
-		
-		
-		*** special provision for the 1st of the month
-		* replace `months' = `months' + 1 if day(`bdate') == 1
-		* replace `shiftedDate' = `shiftedDate' + `daysleft' if day(`bdate') == 1
-
-		/*
-		*** special provision for feb
-		replace `months' = `months' + 1 if ///
-			(day(`bdate') - day(`shiftedDate') >= 2 ) & ///
-			month(`shiftedDate') == 2
-		*/
-		
-		
-			
-			
+		gen `days' = `today' - `shiftedDate'
 			
 		*** fix year
 		replace `years' = floor(`months'/12)
 		replace `months' = mod(`months',12)				
-		
-		
+			
 		gen shiftedDate = `shiftedDate'
 		format shiftedDate %td	
 	}
-	
-	gen `days' = `daysleft'
-	
-	
+
 end
 
 exit

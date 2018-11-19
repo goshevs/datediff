@@ -13,22 +13,23 @@ replace bdate = mdy(2, 26, 2012) if _n == 1
 replace today = mdy(1, 26, 2015) if _n ==1
 format bdate today %td
 
-gen month = 0
-gen day = 35
-gen year = 0
+gen year = 4
+gen month = 8
+gen day = 30
+
 
 
 *** cutoff
-*dateForward bdate, gen(newvar) step(years = year months = month days = day) type(age)
-dateForward bdate, gen(newvar) step(days = day) type(age) replace
+dateForward bdate, gen(newvar) step(years = year months = month days = day) type(age)
+*dateForward bdate, gen(newvar) step(days = day) type(age) replace
 * br if month(bdate) == 1 & inlist(day(bdate),1)
 * br if month(bdate) == 1 & inlist(day(bdate),25, 26, 27, 28, 29, 30, 31)
 
 
 ***
-
-* dateDiff bdate newvar, format(years=myyears months=mymonths days=mydays) type(age)
-dateDiff bdate newvar, format(days=mydays) type(age) replace
+dateDiff bdate newvar, format(years=myyears months=mymonths days=mydays) type(age)
+* dateDiff bdate newvar, format(days=mydays) type(age) replace
+* br if mydays ~= 4
 
 * br if month(bdate) == 1 & inlist(day(bdate),1)
 * br if month(bdate) == 1 & inlist(day(bdate),25, 26, 27, 28, 29, 30, 31)
