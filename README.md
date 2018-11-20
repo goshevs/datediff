@@ -81,25 +81,25 @@ one year is the period from Jan 15, 2018 to Jan 15, 2019.
 
 ### Programme `dateForward`
 
-`dateForward` adds a user-specified number of months to a date
+`dateForward` adds a user-specified number of years, months and/or days to a date.
 
 
 Syntax
 ---
 
 ```
-	dateforward varlist(max=1) [if] [in], GENerate(name) step(string asis) 
-										 [type(string asis) replace]
+	dateforward varlist(max=1) [if] [in], GENerate(name) step(string) 
+						[type(string) replace]
 ```
 <br>
 
 **Required arguments**
 
 
-| input       | description            |
+| argument    | description            |
 |-------------|------------------------|
-| *varlist*   | a `datetime` varible name|
-| *GENerate*  | name of the new variable to be created|
+| *varlist*   | a `datetime` variable name|
+| *GENerate*  | name of a new variable that will contain the output |
 | *step*      | specifies the user-provided input format; see below for details  |
 
 <br>
@@ -107,7 +107,7 @@ Syntax
 **Optional arguments**
 
 
-| option         | description            |
+| arguments      | description            |
 |----------------|------------------------|
 | *type*         | specified the type of calculation to be conducted, see below for details |
 | *replace*      | replaces the varaibles specified in `GENerate` |
@@ -129,7 +129,8 @@ user-specified names of variables that contain years, months and days respective
 - `step(years = varname1 months = varname2)`: move date forward by years and months
 - `step(months = varname2 days = varname3)`: move date forward by months and days
 
-Any variable specified in `step` has to exist and have a valid value. Valid values are all integer values.
+Any variable specified in `step` has to be present in the dataset and has to have valid values. 
+Valid values are positive integers.
 
 <br>
 
