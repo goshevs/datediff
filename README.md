@@ -4,7 +4,7 @@ The repo contains two programmes that help simplify operations with dates
 
 ### Introduction
 
-Working with dates in Stata is easy if using its the built-in `datetime` functionality.
+Working with dates in Stata is easy if using the built-in `datetime` functionality.
 Yet, while it is straight forward to compute difference between dates in days, there is no easy way to compute
 difference between dates in years, months and days, or their combinations. In addition, 
 there is no easy way to calculate the date resulting from adding a specific number of years/months to a start date.
