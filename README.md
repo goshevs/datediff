@@ -71,7 +71,7 @@ user-specified names of variables to be created. These variables will contain ye
 
 `type` can take the following values:
 
-- `age`: computation uses the logic of age calculation. For example, 
+- `age`: computation uses the logic of age calculation (the default). For example, 
 one year is the period from Jan 15, 2018 to Jan 14, 2019.
 - `time`: computation uses the logic of time calculation. For example, 
 one year is the period from Jan 15, 2018 to Jan 15, 2019.
@@ -135,7 +135,7 @@ Valid values are positive integers.
 
 `type` can take the following values:
 
-- `age`: computation uses the logic of age calculation. For example, 
+- `age`: computation uses the logic of age calculation (the default). For example, 
 one year is the period from Jan 15, 2018 to Jan 14, 2019.
 - `time`: computation uses the logic of time calculation. For example, 
 one year is the period from Jan 15, 2018 to Jan 15, 2019.
