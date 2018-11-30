@@ -16,7 +16,7 @@ This repo contains two functions that provide such functionality.
 To load `dateUtilities`, include the following line in your do file:
 
 ```
-do "https://raw.githubusercontent.com/goshevs/datediff/master/dateUtilities.ado"
+qui do "https://raw.githubusercontent.com/goshevs/datediff/master/dateUtilities.ado"
 
 ```
 
@@ -29,7 +29,7 @@ Syntax
 ---
 
 ```
-	datediff varlist, GENerate(string) [Type(string) replace]
+	dateDiff varlist, GENerate(string) [Type(string) replace]
 ```
 <br>
 
@@ -88,7 +88,7 @@ Syntax
 ---
 
 ```
-	dateforward varlist(max=1) [if] [in], GENerate(name) step(string) [type(string) replace]
+	dateForward varlist(max=1) [if] [in], GENerate(name) step(string) [type(string) replace]
 ```
 <br>
 
