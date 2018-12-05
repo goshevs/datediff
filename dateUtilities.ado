@@ -2,9 +2,9 @@
 *** Computing difference between dates in units commonly used by humans
 
 
-*** Move a date forward
-capture program drop dateForward
-program define dateForward, sclass
+*** Move a date forward or backwards
+capture program drop dateShift
+program define dateShift, sclass
 
 	syntax varlist(max=1) [if] [in], GENerate(name) step(string asis) ///
 									[type(string asis) replace]
@@ -51,8 +51,12 @@ program define dateForward, sclass
 			gen `months' = 0
 		}
 		
-		tempvar day month adjMonths year nbdate month_excess day_excess nday_excess daysInMonth ym
+		tempvar sign day month adjMonths year nbdate month_excess day_excess nday_excess daysInMonth ym bdDaysInMonth
 		
+		*** Define direction of shift
+		gen `sign' = 1
+		replace `sign' = -1 if sign(`days') == -1 | sign(`months') == -1 | sign(`years') == -1
+				
 		*** Move months first
 		
 		*** Take care of months that are greater than 12
@@ -60,10 +64,9 @@ program define dateForward, sclass
 		gen `adjMonths' = mod(`months',12)
 			
 		*** Months greater than 12
-		
 		gen `month_excess' = (month(`bdate') + `adjMonths' > 12)
 		
-		*** Move forward months
+		*** Move months
 		gen `month' = cond(`month_excess' == 0, ///
 							month(`bdate') + `adjMonths', ///
 							mod(month(`bdate') + `adjMonths' ,12))
@@ -71,27 +74,42 @@ program define dateForward, sclass
 						   `year' + year(`bdate'), ///
 						   `year' + year(`bdate') + floor((month(`bdate') + `adjMonths' )/12))
 
-		*** Move forward years
+		*** Move years
 		replace `year' = `year' + `years'
+	
 		
-		gen `ym' = mdy(`month', 1, `year')  // this is needed for the _daysInMonth function
+		gen `ym' = mdy(`month', 1, `year') 		// this is needed for the _daysInMonth function
 		
+		if ("`type'" == "age") {
+			replace `ym' = cond(`sign' == -1, `ym' + day(`bdate'), `ym') 
+		}
+		else {
+			replace `ym' = cond(`sign' == -1, `ym' + day(`bdate') - 1, `ym')
+		}
+			
 		*** Handle day overflow
 		_daysInMonth `ym' `daysInMonth'	
-							   
-		*** Move forward days
+		
+		*** Move days
 		if ("`type'" == "age") {
-
 			*** February and first of month adjustment
-			gen `generate' = cond(month(`ym') == 2 & (day(`bdate') > `daysInMonth'), ///
-							 `ym' + `daysInMonth' - 1 + `days', ///
-							 `ym' + day(`bdate') + `days' - 2)					
+			gen `generate' = cond(`sign' == 1, ///
+							 cond(month(`ym') == 2 & (day(`bdate') > `daysInMonth'), ///
+							  `ym' + `daysInMonth' - 1 + `days', ///
+							  `ym' + day(`bdate') + `days' - 2), ///
+							 cond(month(`ym') == 2 & (day(`bdate') > `daysInMonth'), ///
+							  `ym' + `daysInMonth' + `days', ///
+							  `ym' + `days')) if `touse'
 		}
 		else {
 			*** February and first of month adjustment
-			gen `generate' = cond(month(`ym') == 2 & (day(`bdate') > `daysInMonth'), ///
-							 `ym' + `daysInMonth' + `days', ///
-							 `ym' + day(`bdate') + `days' - 1) if `touse'
+			gen `generate' = cond(`sign' == 1, ///
+							 cond(month(`ym') == 2 & (day(`bdate') > `daysInMonth'), ///
+							  `ym' + `daysInMonth' + `days', ///
+							  `ym' + day(`bdate') + `days' - 1), ///
+							  cond(month(`ym') == 2 & (day(`bdate') > `daysInMonth'), ///
+							  `ym' + `daysInMonth' + `days' + 1, ///
+							  `ym' + `days')) if `touse'
 		}
 		format `generate' %td
 	}
@@ -172,7 +190,7 @@ program define dateDiff, sclass
 			replace `vmonths' = (`vyears' - 1 )* 12 + `vmonths' if `vyears' > 1
 			
 			*** Move bdate forward by the amount of months
-			dateForward `bdate', gen(`shiftedDate') step(months = `vmonths') type(`type')
+			dateShift `bdate', gen(`shiftedDate') step(months = `vmonths') type(`type')
 					
 			*** Compute difference in days
 			_daysInMonth `bdate' `dmon1'  // number of days in month(bdate)
@@ -206,7 +224,7 @@ program define dateDiff, sclass
 					replace `shiftedDate' = `shiftedDate' + 1
 				}
 				
-				dateForward `shiftedDate', gen(`nextMonth') step(months = `oneMonth') type(`type')
+				dateShift `shiftedDate', gen(`nextMonth') step(months = `oneMonth') type(`type')
 				gen `daysNextMonth' = `nextMonth' - `shiftedDate'   // month in days
 				replace `vmonths' = `vmonths' + `vdays'/`daysNextMonth'
 				

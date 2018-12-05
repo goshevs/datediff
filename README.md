@@ -79,16 +79,16 @@ one year is the period from Jan 15, 2018 to Jan 15, 2019.
 
 -----
 
-### Programme `dateForward`
+### Programme `dateShift`
 
-`dateForward` adds a user-specified number of years, months and/or days to a date.
+`dateShift` shifts a date forward or backward in time by a user-specified number of years, months and/or days.
 
 
 Syntax
 ---
 
 ```
-	dateForward varlist(max=1) [if] [in], GENerate(name) step(string) [type(string) replace]
+	dateShift varlist(max=1) [if] [in], GENerate(name) step(string) [type(string) replace]
 ```
 <br>
 
@@ -122,14 +122,15 @@ user-specified names of variables that contain years, months and days respective
 
 `step` can also be specified in the following ways:
 
-- `step(years = varname)`: move date forward by years
-- `step(months = varname)`: move date forward by months
-- `step(days = varname)`: move date forward by days
-- `step(years = varname1 months = varname2)`: move date forward by years and months
-- `step(months = varname2 days = varname3)`: move date forward by months and days
+- `step(years = varname)`: move dates by years
+- `step(months = varname)`: move dates by months
+- `step(days = varname)`: move dates by days
+- `step(years = varname1 months = varname2)`: move dates by years and months
+- `step(months = varname2 days = varname3)`: move dates by months and days
 
 Any variable specified in `step` has to be present in the dataset and has to have valid values. 
-Valid values are positive integers.
+Valid values are positive or negative integers. Mixed input, e.g. negative months and positive days, are
+not supported at this time.
 
 <br>
 
@@ -137,23 +138,25 @@ Valid values are positive integers.
 
 - `age`: computation uses the logic of age calculation (the default). For example, 
 one year is the period from Jan 15, 2018 to Jan 14, 2019.
-- `time`: computation uses the logic of time calculation. For example, 
+- `time`: computation uses the logic of time calculation,. For example, 
 one year is the period from Jan 15, 2018 to Jan 15, 2019.
 
 
 
-Examples (see examples.do for executable examples)
+Examples
 ---
 
+Executable examples are available in examples.do
+
 ```
-*** Move bdate forward by the specified years, months and days, using age principle of calculation
-dateForward bdate, gen(newvar) step(years = year months = month days = day)
+*** Move bdates by the specified years, months and days, using age principle of calculation
+dateShift bdate, gen(newvar) step(years = year months = month days = day)
 
 *** Compute date difference in years, months and days, using age principle of calculation
 dateDiff bdate newvar, gen(years=years months = months days = days) replace
 
-*** Move bdate forward by the specified months, using age principle of calculation
-dateForward bdate, gen(newvar) step(months = month) replace 
+*** Move bdates by the specified months, using age principle of calculation
+dateShift bdate, gen(newvar) step(months = month) replace 
 
 *** Compute date difference in months, using age principle of calculation
 dateDiff bdate newvar, gen(months = months) replace
@@ -161,8 +164,8 @@ dateDiff bdate newvar, gen(months = months) replace
 
 *** Additional examples
 
-*** Move bdate forward by the specified years and days, using time principle of calculation
-dateForward bdate, gen(newvar) step(years = year days = day) type(time) replace
+*** Move bdates by the specified years and days, using time principle of calculation
+dateShift bdate, gen(newvar) step(years = year days = day) type(time) replace
 
 *** Compute date difference in years, using time principle of calculation
 dateDiff bdate newvar, gen(years=years1) type(time) replace
