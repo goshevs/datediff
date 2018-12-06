@@ -152,7 +152,7 @@ days months have. These inconsistencies manifest in a small number of corner cas
 such as end-of-the-month start dates that translate to end dates that do not exist (such 
 as February 30th or June 31st). In such cases, the end date is set to the last valid date prior to the non-existant date.
 For example, an age shift of October 30th backwards by one month yields September 30th. To flag inconsistent shifts, 
-add option `INConsistent`. 
+use option `INConsistent`. 
 
 
 Examples
