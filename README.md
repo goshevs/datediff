@@ -89,7 +89,7 @@ Syntax
 
 ```
 	dateShift varlist(max=1) [if] [in], GENerate(name) step(string)
-										[type(string) replace INConsistent(name)]
+							[type(string) replace INConsistent(name)]
 ```
 <br>
 
