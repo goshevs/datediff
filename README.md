@@ -7,7 +7,7 @@ The repo contains two programmes that help simplify operations with dates
 Working with dates in Stata is easy if using the built-in `datetime` functionality.
 Yet, while it is straight forward to compute difference between dates in days, there is no easy way to compute
 difference between dates in years, months and days, or their combinations. In addition, 
-there is no easy way to calculate the date resulting from adding a specific number of years/months to a start date.
+there is no easy way to calculate the date resulting from adding/subtracting a specific number of years/months to a date.
 This repo contains two functions that provide such functionality.
 
 
@@ -88,7 +88,7 @@ Syntax
 ---
 
 ```
-	dateShift varlist(max=1) [if] [in], GENerate(name) step(string) [type(string) replace]
+	dateShift varlist(max=1) [if] [in], GENerate(name) step(string) [type(string) replace INConsistent(name)]
 ```
 <br>
 
@@ -110,6 +110,7 @@ Syntax
 |----------------|------------------------|
 | *type*         | specified the type of calculation to be conducted, see below for details |
 | *replace*      | replaces the varaibles specified in `GENerate` |
+| *INConsistent* | flag for inconsistent backward shifts; see below for details |
 
 
 <br>
@@ -129,18 +130,29 @@ user-specified names of variables that contain years, months and days respective
 - `step(months = varname2 days = varname3)`: move dates by months and days
 
 Any variable specified in `step` has to be present in the dataset and has to have valid values. 
-Valid values are positive or negative integers. Mixed input, e.g. negative months and positive days, are
-not supported at this time.
+Valid values are positive or negative integers. Mixed input, e.g. negative months and positive days within 
+an observation, are not supported at this time. However, it is possible to shift different observations in different directions 
+and by different amounts.
 
 <br>
 
 `type` can take the following values:
 
-- `age`: computation uses the logic of age calculation (the default). For example, 
-one year is the period from Jan 15, 2018 to Jan 14, 2019.
-- `time`: computation uses the logic of time calculation,. For example, 
-one year is the period from Jan 15, 2018 to Jan 15, 2019.
+- `age`: computation uses the logic of age calculation (the default), i.e. 
+the length of the shift includes the start date. Therefore, one year is defined as 
+the period from Jan 15, 2018 to Jan 14, 2019.
+- `time`: computation uses the logic of time calculation, i.e. the length of the shift
+does not include the start date. Therefore, one year in this case is defined as 
+the period from Jan 15, 2018 to Jan 15, 2019.
 
+<br>
+
+**Note**: Backward shifts could exhibit *minor inconsistencies* due to the different number of
+days months have. These inconsistencies manifest in a small number of corner cases 
+such as end-of-the-month start dates that translate to end dates that do not exist (such 
+as February 30th or June 31st). In such cases, the end date is set to the last valid date prior to the non-existant date.
+For example, an age shift of October 30th backwards by one month yields September 30th. To flag inconsistent shifts, 
+add option `INConsistent`. 
 
 
 Examples

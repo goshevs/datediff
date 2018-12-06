@@ -20,11 +20,11 @@ snapshot save
 *** MOVING DATES
 
 ************************
-*** Define a step forward
+*** Define a random step forward for every date
 
-gen year = 0
-gen month = 1
-gen day = 4
+gen year = round(5*runiform())
+gen month = round(15*runiform())
+gen day = round(31*runiform())
 
 *** Move bdate forward by the specified years, months and days, using age principle of calculation
 dateShift bdate, gen(newdate) step(years = year months = month days = day)
@@ -40,11 +40,11 @@ snapshot restore 1
 
 
 **************************
-*** Define a step backwards
+*** Define a random step backwards for every date
 
-gen year = 0
-gen month = -1
-gen day = -4
+gen year = -round(5*runiform())
+gen month = -round(15*runiform())
+gen day = -round(31*runiform())
 
 *** Move bdate backwards by the specified years, months and days, using age principle of calculation
 dateShift bdate, gen(newdate) step(years = year months = month days = day) replace
@@ -62,10 +62,10 @@ snapshot restore 1
 ********************************************************************************
 *** DIFFERENCES BETWEEN DATES
 
-*** Define a step forward and shift date
-gen year = 0
-gen month = 1
-gen day = 4
+*** Define a random step forward and a shift date
+gen year = round(5*runiform())
+gen month = round(15*runiform())
+gen day = round(31*runiform())
 dateShift bdate, gen(newdate) step(years = year months = month days = day) replace
 
 *** Compute date difference in years, months and days, using age principle of calculation

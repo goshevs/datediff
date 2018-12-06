@@ -1,5 +1,8 @@
 ********************************************************************************
-*** Computing difference between dates in units commonly used by humans
+*** Computing date shifts and difference between dates in units commonly 
+***                           used by humans
+
+*** Move a date forward or backwards
 
 
 *** Move a date forward or backwards
@@ -7,7 +10,7 @@ capture program drop dateShift
 program define dateShift, sclass
 
 	syntax varlist(max=1) [if] [in], GENerate(name) step(string asis) ///
-									[type(string asis) replace]
+									[type(string asis) replace INConsistent(name)]
 	qui{
 		tokenize `varlist'
 		args bdate
@@ -30,14 +33,13 @@ program define dateShift, sclass
 			local `dateItem' "`s(`dateItem')'"
 		}
 		
-		*noi di "`years'"
-		*noi di "`months'"
-		*noi di "`days'"
-		
+		*** Drop variables if replace is specified
 		if ("`replace'" ~= "") {
 			capture drop `generate'
+			capture drop `inconsistent'
 		}
 		
+		*** Generate variables for any missing step sub-arguments
 		if ("`years'" == "") {
 			tempvar years
 			gen `years' = 0
@@ -50,68 +52,118 @@ program define dateShift, sclass
 			tempvar months
 			gen `months' = 0
 		}
-		
-		tempvar sign day month adjMonths year nbdate month_excess day_excess nday_excess daysInMonth ym bdDaysInMonth
-		
-		*** Define direction of shift
-		gen `sign' = 1
-		replace `sign' = -1 if sign(`days') == -1 | sign(`months') == -1 | sign(`years') == -1
-				
-		*** Move months first
-		
-		*** Take care of months that are greater than 12
-		gen `year' = floor(`months'/12)
-		gen `adjMonths' = mod(`months',12)
-			
-		*** Months greater than 12
-		gen `month_excess' = (month(`bdate') + `adjMonths' > 12)
-		
-		*** Move months
-		gen `month' = cond(`month_excess' == 0, ///
-							month(`bdate') + `adjMonths', ///
-							mod(month(`bdate') + `adjMonths' ,12))
-		replace `year' = cond(`month_excess' == 0, ///
-						   `year' + year(`bdate'), ///
-						   `year' + year(`bdate') + floor((month(`bdate') + `adjMonths' )/12))
 
-		*** Move years
-		replace `year' = `year' + `years'
-	
-		
-		gen `ym' = mdy(`month', 1, `year') 		// this is needed for the _daysInMonth function
-		
-		if ("`type'" == "age") {
-			replace `ym' = cond(`sign' == -1, `ym' + day(`bdate'), `ym') 
+		*** If no shift is requested
+		if (`years' == 0 & `months' == 0 & `days' == 0) {
+			gen `generate' = `bdate'		
 		}
-		else {
-			replace `ym' = cond(`sign' == -1, `ym' + day(`bdate') - 1, `ym')
-		}
+		else {	
 			
-		*** Handle day overflow
-		_daysInMonth `ym' `daysInMonth'	
-		
-		*** Move days
-		if ("`type'" == "age") {
-			*** February and first of month adjustment
-			gen `generate' = cond(`sign' == 1, ///
-							 cond(month(`ym') == 2 & (day(`bdate') > `daysInMonth'), ///
-							  `ym' + `daysInMonth' - 1 + `days', ///
-							  `ym' + day(`bdate') + `days' - 2), ///
-							 cond(month(`ym') == 2 & (day(`bdate') > `daysInMonth'), ///
-							  `ym' + `daysInMonth' + `days', ///
-							  `ym' + `days')) if `touse'
-		}
-		else {
-			*** February and first of month adjustment
-			gen `generate' = cond(`sign' == 1, ///
-							 cond(month(`ym') == 2 & (day(`bdate') > `daysInMonth'), ///
-							  `ym' + `daysInMonth' + `days', ///
-							  `ym' + day(`bdate') + `days' - 1), ///
-							  cond(month(`ym') == 2 & (day(`bdate') > `daysInMonth'), ///
-							  `ym' + `daysInMonth' + `days' + 1, ///
-							  `ym' + `days')) if `touse'
+			tempvar sign day month adjMonths year nbdate month_excess day_excess nday_excess daysInMonth ym bdDaysInMonth
+			
+			*** Check consistency of shift requests
+			mata: consistencyCheck("`days' `months' `years'")
+			if "`compliers'" ~= "`=_N'" {
+				noi di in r "Inconsistent shift request." _n ///
+				"Please, ensure that within an observation year, month and day are all non-negative or non-positive"
+				exit 498
+			}
+					
+			*** Define direction of shift
+			gen `sign' = 1
+			replace `sign' = -1 if sign(`days') == -1 | sign(`months') == -1 | sign(`years') == -1
+			
+					
+			*** Move months first
+			
+			*** Take care of months that are greater than 12
+			gen `year' = floor(`months'/12)
+			gen `adjMonths' = mod(`months',12)
+				
+			*** Months greater than 12
+			gen `month_excess' = (month(`bdate') + `adjMonths' > 12)
+			
+			*** Move months
+			gen `month' = cond(`month_excess' == 0, ///
+								month(`bdate') + `adjMonths', ///
+								mod(month(`bdate') + `adjMonths' ,12))
+			replace `year' = cond(`month_excess' == 0, ///
+							   `year' + year(`bdate'), ///
+							   `year' + year(`bdate') + floor((month(`bdate') + `adjMonths' )/12))
+
+			*** Move years
+			replace `year' = `year' + `years'
+			
+			gen `ym' = mdy(`month', 1, `year') 		// this is needed for the _daysInMonth function
+
+			*** Handle day overflow
+			_daysInMonth `ym' `daysInMonth'	
+			
+			*** Generating date and making a few adjustments 
+			if ("`type'" == "age") {
+			
+				***********************
+				*** Moving date forward
+			
+				*** February and first of the month adjustment
+				gen `generate' = cond(`sign' == 1, ///
+								 cond(month(`ym') == 2 & (day(`bdate') > `daysInMonth'), ///
+								  `ym' + `daysInMonth' - 1 + `days', ///
+								  `ym' + day(`bdate') + `days' - 2), ///
+								 `ym') if `touse'
+				
+				*************************				 
+				*** Moving date backwards
+					
+				*** Adjustments for overflow arising from months with 30 days; February is excluded
+				replace `generate' = cond(`daysInMonth' < day(`bdate') + 1 & inlist(`month', 4, 6, 9, 11),  ///
+									  `ym' + day(`bdate') -1 + `days' , ///
+									   cond(`month' == 2, `ym', `ym' + day(`bdate') + `days')) if `sign' == -1 & `touse'
+						
+				*** Adjustments for February
+				replace `generate' = cond(`daysInMonth' < day(`bdate') + 1 , ///
+										  `ym' + `daysInMonth' - 1 + `days', ///
+										  `ym' + day(`bdate') + `days') if `month' == 2 & `sign' == -1 & `touse'
+			}
+			else {
+			
+				***********************
+				*** Moving date forward
+				
+				*** February and first of month adjustment
+				gen `generate' = cond(`sign' == 1, ///
+								 cond(month(`ym') == 2 & (day(`bdate') > `daysInMonth'), ///
+								  `ym' + `daysInMonth' + `days', ///
+								  `ym' + day(`bdate') + `days' - 1), ///
+								 `ym') if `touse'
+			
+						
+				*************************				 
+				*** Moving date backwards
+				
+				*** Adjustments for overflow arising from months with 30 days; February is excluded
+				replace `generate' = cond(`daysInMonth' < day(`bdate') & inlist(`month', 4, 6, 9, 11),  ///
+									  `ym' + day(`bdate') - 2 + `days', ///
+									   cond(`month' ==2, `ym', `ym' + day(`bdate') - 1 + `days')) if `sign' == -1 & `touse'
+							
+				*** Adjustments for February
+				replace `generate' = cond(`daysInMonth' < day(`bdate'), ///
+										  `ym' + `daysInMonth' - 1 + `days', ///
+										  `ym' + day(`bdate') - 1 + `days') if `month' == 2 & `sign' == -1 & `touse'
+			}
 		}
 		format `generate' %td
+		
+		if ("`inconsistent'" ~= "") {
+		
+			tempvar checkDate years1 months1 days1
+			
+			foreach tp in "years" "months" "days" {
+				gen ``tp'1' = abs(``tp'')
+			}
+			dateShift `generate', gen(`checkDate') step(years= `years1' months = `months1' days = `days1') type(`type')
+			gen `inconsistent' = (`bdate' ~= `checkDate')
+		}
 	}
 end
 
@@ -134,10 +186,6 @@ program define dateDiff, sclass
 		foreach dateItem in "years" "months" "days" {
 			local `dateItem' "`s(`dateItem')'"
 		}
-		
-		* noi di "`years'"
-		* noi di "`months'"
-		* noi di "`days'"
 		
 		
 		if "`type'" == "" {
@@ -167,7 +215,6 @@ program define dateDiff, sclass
 			gen `days' = `today' - `bdate' + 1
 		}
 		else {
-			* noi di "Year/month/day"
 			
 			if ("`years'" == "") {
 				tempvar vyears
@@ -252,15 +299,12 @@ program define dateDiff, sclass
 				noi di in r "Option format specified incorrectly"
 				exit 1000
 			}
-			
-			* gen shiftedDate = `shiftedDate'
-			* gen nextMonth = `nextMonth'
-			* format shiftedDate %td	
 		}
 	}
 end
 
 
+*** Parser of format input
 capture program drop _parse_format
 program define _parse_format, sclass
 	args myinput
@@ -280,6 +324,7 @@ program define _parse_format, sclass
 	
 end
 
+*** Report the max number of days of the month
 capture program drop _daysInMonth
 program define _daysInMonth
 	args inDate outVar
@@ -287,4 +332,20 @@ program define _daysInMonth
 	gen `outVar' = cond(inlist(month(`inDate'), 1,3,5,7,8,10,12), 31, ///
 				   cond(inlist(month(`inDate'), 2) & mod(year(`inDate') , 4) == 0, 29, ///
 				   cond(inlist(month(`inDate'), 2), 28, 30)))
+end
+
+*** Check consistency of requested shifts
+cap mata : mata drop consistencyCheck()
+mata:
+void function consistencyCheck(string scalar vars) {
+	
+	real matrix mydata
+	
+	mydata = st_data(., (vars))
+	nPos = colsum(rowsum(mydata :>=0) :== 3)
+	nNeg = colsum(rowsum(mydata :<=0) :== 3)
+	n = nPos + nNeg
+	
+	st_local("compliers", strofreal(n))
+}
 end
