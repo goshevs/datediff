@@ -2,8 +2,6 @@
 *** Computing date shifts and difference between dates in units commonly 
 ***                           used by humans
 
-*** Move a date forward or backwards
-
 
 *** Move a date forward or backwards
 capture program drop dateShift
@@ -23,7 +21,7 @@ program define dateShift, sclass
 		else {
 			if (!inlist("`type'", "age", "time")) {
 				noi di in r "Option type specified incorrectly."
-				exit 1000
+				exit 498
 			}
 		}
 		_parse_format "`step'"
@@ -53,8 +51,14 @@ program define dateShift, sclass
 			gen `months' = 0
 		}
 
+		*** Check values of shift variables
+		foreach var of varlist `years' `months' `days' {
+			sum `var'
+			local `var'Mean = `r(mean)'
+		}
+		
 		*** If no shift is requested
-		if (`years' == 0 & `months' == 0 & `days' == 0) {
+		if ("`yearsMean'" == "0" & "`monthsMean'" == "0" & "`daysMean'" == "0") {
 			gen `generate' = `bdate'		
 		}
 		else {	
@@ -62,13 +66,15 @@ program define dateShift, sclass
 			tempvar sign day month adjMonths year nbdate month_excess day_excess nday_excess daysInMonth ym bdDaysInMonth
 			
 			*** Check consistency of shift requests
-			mata: consistencyCheck("`days' `months' `years'")
-			if "`compliers'" ~= "`=_N'" {
+			mata: consistencyCheck("`days' `months' `years'", "`touse'")
+			
+			sum `touse'
+			if "`compliers'" ~= "`r(sum)'" {
 				noi di in r "Inconsistent shift request." _n ///
 				"Please, ensure that within an observation year, month and day are all non-negative or non-positive"
 				exit 498
 			}
-					
+			
 			*** Define direction of shift
 			gen `sign' = 1
 			replace `sign' = -1 if sign(`days') == -1 | sign(`months') == -1 | sign(`years') == -1
@@ -171,7 +177,7 @@ end
 *** Compute difference between dates
 capture program drop dateDiff
 program define dateDiff, sclass
-	syntax varlist(min=2 max=2), GENerate(string asis) [Type(string asis) replace]
+	syntax varlist(min=2 max=2) [if] [in], GENerate(string asis) [Type(string asis) replace]
 
 	qui {	
 		*** tokenize the varlist
@@ -179,22 +185,23 @@ program define dateDiff, sclass
 		local bdate `1'
 		local today `2'
 		
+		marksample touse
+		
 		*** parse the user-provided format
 		_parse_format "`generate'"
-		* sreturn list
 		
 		foreach dateItem in "years" "months" "days" {
 			local `dateItem' "`s(`dateItem')'"
 		}
 		
-		
+		*** Check type
 		if "`type'" == "" {
 			local type "age"
 		}
 		else {
 			if (!inlist("`type'", "age", "time")) {
 				noi di in r "Option type specified incorrectly."
-				exit 1000
+				exit 498
 			}
 		}
 		
@@ -207,12 +214,12 @@ program define dateDiff, sclass
 		*** check if variables are in td format
 		if("`:format `bdate''" ~= "%td" | "`:format `today''" ~= "%td") {
 			noi di in r "Variables in varlist should be in Stata date format (%td). See help on datetime"
-			exit 1000
+			exit 498
 		}
 		
 		if ("`years'" == "" & "`months'" == "") {
 			*** difference in days
-			gen `days' = `today' - `bdate' + 1
+			gen `days' = `today' - `bdate' + 1 if `touse'
 		}
 		else {
 			
@@ -226,34 +233,48 @@ program define dateDiff, sclass
 				tempvar vdays
 			}
 					
-			tempvar vyears vmonths vdays diffMonth shiftedDate  ///
-						dmon1 dmon2 dmon3 same_month resid 
+			tempvar vyears vmonths vdays shiftedDate daysInToday
 			
 			*** Compute diff in months
-			gen `vyears' = year(`today') - year(`bdate')
+			gen `vyears' = year(`today') - year(`bdate') if `touse'
 			
-			gen `vmonths' = cond(`vyears' == 0, month(`today') - month(`bdate'), 12 - month(`bdate') + month(`today'))
-			replace `vmonths' = `vmonths' - 1 if day(`bdate') > day(`today')
-			replace `vmonths' = (`vyears' - 1 )* 12 + `vmonths' if `vyears' > 1
+			gen `vmonths' = cond(`vyears' == 0, ///
+								 month(`today') - month(`bdate'), ///
+								 12 - month(`bdate') + month(`today')) if `touse'
+	
+			if ("`type'" == "age") {
+				replace `vmonths' = `vmonths' - 1 if day(`bdate') - 1 > day(`today')
+		
+				*** Adjustment for same month
+				_daysInMonth `today' `daysInToday' 
+				replace `vmonths' = `vmonths' + 1 if `vmonths' == 0 & ///
+									day(`bdate') == 1 & day(`today') == `daysInToday'				
+			}		
+			else {
+				replace `vmonths' = `vmonths' - 1 if day(`bdate') > day(`today')
+				
+			}
+
+			replace `vmonths' = (`vyears' - 1 )* 12 + `vmonths' if `vyears' > 1 
 			
 			*** Move bdate forward by the amount of months
-			dateShift `bdate', gen(`shiftedDate') step(months = `vmonths') type(`type')
-					
-			*** Compute difference in days
-			_daysInMonth `bdate' `dmon1'  // number of days in month(bdate)
+			dateShift `bdate' if `touse', gen(`shiftedDate') step(months = `vmonths') type(`type')
 			
-			gen `vdays' = `today' - `shiftedDate'
+			*** Generate days
+			gen `vdays' = `today' - `shiftedDate' if `touse'
 				
-			*** fix year
-			replace `vyears' = floor(`vmonths'/12)
-			replace `vmonths' = mod(`vmonths',12)				
+			*** Update year
+			replace `vyears' = floor(`vmonths'/12) if `touse'
+			replace `vmonths' = mod(`vmonths',12) if `touse'			
 			
 			
+			******************************
 			*** Reporting
+			
 			if ("`years'" ~= "" & "`months'" ~= "" & "`days'" ~= "")  {
-				gen `years'  = `vyears'
+				gen `years'  = `vyears' 
 				gen `months' = `vmonths'
-				gen `days'   = `vdays'
+				gen `days'   = `vdays'			
 			}
 			else if ("`days'" == "") {
 				*** Convert residual days to months and years in months
@@ -263,20 +284,20 @@ program define dateDiff, sclass
 				**** 3. Compute difference in number of days between new date and shiftedDay
 				**** 4. Compute the proportion of month and add years
 				
-				tempvar oneMonth nextMonth dmon4 daysNextMonth
+				tempvar oneMonth nextMonth daysNextMonth
 				
-				gen `oneMonth' = 1
+				gen `oneMonth' = 1 if `touse'
 				
 				if ("`type'" == "age") {
 					replace `shiftedDate' = `shiftedDate' + 1
 				}
 				
-				dateShift `shiftedDate', gen(`nextMonth') step(months = `oneMonth') type(`type')
-				gen `daysNextMonth' = `nextMonth' - `shiftedDate'   // month in days
+				dateShift `shiftedDate' if `touse', gen(`nextMonth') step(months = `oneMonth') type(`type')
+				gen `daysNextMonth' = `nextMonth' - `shiftedDate' if `touse'  // month in days
 				replace `vmonths' = `vmonths' + `vdays'/`daysNextMonth'
 				
 				if ("`years'" == "") {  // compute time in months
-					replace `vmonths' = `vmonths' + `vyears' * 12
+					replace `vmonths' = `vmonths' + `vyears' * 12 
 					gen `months' = `vmonths'
 				}
 				else if ("`months'" == "") {  // compute time in years
@@ -290,14 +311,14 @@ program define dateDiff, sclass
 				}
 			}	
 			else if ("`years'" == "") {
-				replace `vmonths' = `vmonths' + `vyears' * 12
+				replace `vmonths' = `vmonths' + `vyears' * 12 
 				
-				gen `months' = `vmonths' 
+				gen `months' = `vmonths'
 				gen `days'   = `vdays'
 			}
 			else {
 				noi di in r "Option format specified incorrectly"
-				exit 1000
+				exit 498
 			}
 		}
 	}
@@ -324,6 +345,7 @@ program define _parse_format, sclass
 	
 end
 
+
 *** Report the max number of days of the month
 capture program drop _daysInMonth
 program define _daysInMonth
@@ -334,18 +356,20 @@ program define _daysInMonth
 				   cond(inlist(month(`inDate'), 2), 28, 30)))
 end
 
+
 *** Check consistency of requested shifts
 cap mata : mata drop consistencyCheck()
 mata:
-void function consistencyCheck(string scalar vars) {
+void function consistencyCheck(string scalar vars, string scalar touse) {
 	
 	real matrix mydata
-	
-	mydata = st_data(., (vars))
-	nPos = colsum(rowsum(mydata :>=0) :== 3)
-	nNeg = colsum(rowsum(mydata :<=0) :== 3)
-	n = nPos + nNeg
-	
+
+	st_view(mydata, ., (vars), touse)
+	nPos  = colsum(rowsum(mydata :>=0) :== 3)
+	nNeg  = colsum(rowsum(mydata :<=0) :== 3)
+	nZero = colsum(rowsum(mydata :==0) :== 3)
+	n = nPos + nNeg - nZero
+
 	st_local("compliers", strofreal(n))
 }
 end

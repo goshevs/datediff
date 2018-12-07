@@ -1,8 +1,8 @@
-## Utilities for working with dates
+# Utilities for working with dates
 
 The repo contains two programmes that help simplify operations with dates 
 
-### Introduction
+## Introduction
 
 Working with dates in Stata is easy if using the built-in `datetime` functionality.
 Yet, while it is straight forward to compute difference between dates in days, there is no easy way to compute
@@ -11,7 +11,7 @@ there is no easy way to calculate the date resulting from adding/subtracting a s
 This repo contains two functions that provide such functionality.
 
 
-### Installation
+## Installation
 
 To load `dateUtilities`, include the following line in your do file:
 
@@ -20,16 +20,15 @@ qui do "https://raw.githubusercontent.com/goshevs/datediff/master/dateUtilities.
 
 ```
 
-### Programme `dateDiff`
+## Programme `dateDiff`
 
 `dateDiff` calculates the difference between two dates in years, months and/or days.
 
 
-Syntax
----
+### Syntax
 
 ```
-	dateDiff varlist, GENerate(string) [Type(string) replace]
+	dateDiff varlist [if] [in], GENerate(string) [Type(string) replace]
 ```
 <br>
 
@@ -38,7 +37,7 @@ Syntax
 
 | input       | description            |
 |-------------|------------------------|
-| *varlist*   | two variables in Stata date format (%td) |
+| *varlist*   | two variables in Stata date format (%td); the date in the first variable should precede the date in the second variable within an observation|
 | *GENerate*  | specifies the user-required output format; see below for details |
 
 <br>
@@ -76,16 +75,16 @@ one year is the period from Jan 15, 2018 to Jan 14, 2019.
 - `time`: computation uses the logic of time calculation. For example, 
 one year is the period from Jan 15, 2018 to Jan 15, 2019.
 
+<br>
 
 -----
 
-### Programme `dateShift`
+## Programme `dateShift`
 
 `dateShift` shifts a date forward or backward in time by a user-specified number of years, months and/or days.
 
 
-Syntax
----
+### Syntax
 
 ```
 	dateShift varlist(max=1) [if] [in], GENerate(name) step(string) ///
@@ -151,24 +150,23 @@ the period from Jan 15, 2018 to Jan 15, 2019.
 **Note**: Backward shifts could exhibit *minor inconsistencies* due to the different number of
 days months have. These inconsistencies manifest in a small number of corner cases 
 such as end-of-the-month start dates that translate to end dates that do not exist (such 
-as February 30th or June 31st). In such cases, the end date is set to the last valid date prior to the non-existant date.
+as February 30th or June 31st). In such cases, the end date is set to the last valid date prior to the non-existent date.
 For example, an age shift of October 30th backwards by one month yields September 30th. To flag inconsistent shifts, 
 use option `INConsistent`. 
 
 
-Examples
----
+## Examples
 
-Executable examples are available in examples.do
+Additional examples are available in examples.do
 
 ```
-*** Move bdates by the specified years, months and days, using age principle of calculation
+*** Move bdates by the specified values in variables year, month and day, using age principle of calculation
 dateShift bdate, gen(newvar) step(years = year months = month days = day)
 
 *** Compute date difference in years, months and days, using age principle of calculation
 dateDiff bdate newvar, gen(years=years months = months days = days) replace
 
-*** Move bdates by the specified months, using age principle of calculation
+*** Move bdates by the specified values in variable month, using age principle of calculation
 dateShift bdate, gen(newvar) step(months = month) replace 
 
 *** Compute date difference in months, using age principle of calculation
@@ -177,7 +175,7 @@ dateDiff bdate newvar, gen(months = months) replace
 
 *** Additional examples
 
-*** Move bdates by the specified years and days, using time principle of calculation
+*** Move bdates by the specified values in variables year and day, using time principle of calculation
 dateShift bdate, gen(newvar) step(years = year days = day) type(time) replace
 
 *** Compute date difference in years, using time principle of calculation

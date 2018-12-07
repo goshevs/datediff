@@ -2,6 +2,8 @@
 *** Examples
 
 clear
+snapshot erase 1
+
 set more off
 set seed 12345
 
@@ -18,6 +20,8 @@ snapshot save
 
 ********************************************************************************
 *** MOVING DATES
+********************************************************************************
+
 
 ************************
 *** Define a random step forward for every date
@@ -25,6 +29,12 @@ snapshot save
 gen year = round(5*runiform())
 gen month = round(15*runiform())
 gen day = round(31*runiform())
+
+/* Alternatively, can define a common step for all dates
+gen year = 2
+gen month = 9
+gen day = 6
+*/
 
 *** Move bdate forward by the specified years, months and days, using age principle of calculation
 dateShift bdate, gen(newdate) step(years = year months = month days = day)
@@ -34,7 +44,6 @@ dateShift bdate, gen(newdate) step(months = month) replace
 
 *** Move bdate forward by the specified years and days, using time principle of calculation
 dateShift bdate, gen(newdate) step(years = year days = day) type(time) replace
-
 
 snapshot restore 1
 
@@ -61,15 +70,17 @@ snapshot restore 1
 
 ********************************************************************************
 *** DIFFERENCES BETWEEN DATES
+********************************************************************************
 
-*** Define a random step forward and a shift date
+
+*** Setup: Define a random step forward and a shift date
 gen year = round(5*runiform())
 gen month = round(15*runiform())
 gen day = round(31*runiform())
 dateShift bdate, gen(newdate) step(years = year months = month days = day) replace
 
 *** Compute date difference in years, months and days, using age principle of calculation
-dateDiff bdate newdate, gen(years=years months = months days = days) replace
+dateDiff bdate newdate, gen(years=years1 months = months1 days = days1) replace
 
 *** Compute date difference in months, using age principle of calculation
 dateDiff bdate newdate, gen(months = months1) replace
