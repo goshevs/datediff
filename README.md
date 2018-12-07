@@ -130,8 +130,9 @@ user-specified names of variables that contain years, months and days respective
 - `step(months = varname2 days = varname3)`: move dates by months and days
 
 Any variable specified in `step` has to be present in the dataset and has to have valid values. 
-Valid values are positive or negative integers. Mixed input, e.g. negative months and positive days within 
-an observation, are not supported at this time. However, it is possible to shift different observations in different directions 
+Valid values are positive or negative integers. Mixed input within an observation,
+e.g. negative months and positive days, is not supported at this time. However, it is 
+possible to shift different observations in different directions 
 and by different amounts.
 
 <br>
