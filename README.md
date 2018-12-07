@@ -35,9 +35,9 @@ qui do "https://raw.githubusercontent.com/goshevs/datediff/master/dateUtilities.
 **Required arguments**
 
 
-| input       | description            |
+| argument    | description            |
 |-------------|------------------------|
-| *varlist*   | two variables in Stata date format (%td); the date in the first variable should precede the date in the second variable within an observation|
+| *varlist*   | two variables in Stata date format (%td); within observatins, dates in the first variable should precede dates in the second variable |
 | *GENerate*  | specifies the user-required output format; see below for details |
 
 <br>
@@ -45,7 +45,7 @@ qui do "https://raw.githubusercontent.com/goshevs/datediff/master/dateUtilities.
 **Optional arguments**
 
 
-| option         | description            |
+| argument       | description            |
 |----------------|------------------------|
 | *type*         | specified the type of calculation to be conducted, see below for details |
 | *replace*      | replaces the varaibles specified in `GENerate` |
@@ -106,10 +106,10 @@ one year is the period from Jan 15, 2018 to Jan 15, 2019.
 **Optional arguments**
 
 
-| arguments      | description            |
+| argument       | description            |
 |----------------|------------------------|
 | *type*         | specified the type of calculation to be conducted, see below for details |
-| *replace*      | replaces the varaibles specified in `GENerate` |
+| *replace*      | replaces the variables specified in `GENerate` |
 | *INConsistent* | flag for inconsistent backward shifts; see below for details |
 
 
